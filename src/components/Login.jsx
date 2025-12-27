@@ -1,25 +1,52 @@
 import React, { useRef, useState } from "react";
 import Header from "./Header";
 import { checkValidData } from "../utills/validation";
+import { createUserWithEmailAndPassword,signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../utills/firebase";
 
 const Login = () => {
   const [isSignInForm, setSignInForm] = useState(true);
-  const [errorMessage,setErrorMessage]=useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
 
-  const email=useRef(null);
-  const password=useRef(null);
+  const email = useRef(null);
+  const password = useRef(null);
 
-  const handleButtonClick=()=>{
+  const handleButtonClick = () => {
     //form validation
 
-    const message=checkValidData(email.current.value,password.current.value);
+    const message = checkValidData(email.current.value, password.current.value);
     setErrorMessage(message);
-    
-    //Sign in / Sign up
-
-    
-    
-  }
+    if (message) return;
+    if (!isSignInForm) {
+      //Sign Up Logic
+      createUserWithEmailAndPassword(
+        auth,
+        email.current.value,
+        password.current.value
+      )
+        .then((userCredential) => {
+          // Signed up
+          const user = userCredential.user;
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          setErrorMessage(errorCode + "-" + errorMessage);
+        });
+    } else {
+      //Sign In Logic
+      signInWithEmailAndPassword(auth, email.current.value, password.current.value)
+        .then((userCredential) => {
+          // Signed in
+          const user = userCredential.user;
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          setErrorMessage(errorCode + "-" + errorMessage);
+        });
+    }
+  };
 
   const toggleSignInForm = () => {
     setSignInForm(!isSignInForm);
@@ -35,7 +62,10 @@ const Login = () => {
           alt=""
         />
       </div>
-      <form onSubmit={(e)=>e.preventDefault()} className="bg-black p-12 absolute my-30 w-3/12 mx-auto right-0 left-0 rounded-2xl opacity-80 text-white">
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        className="bg-black p-12 absolute my-30 w-3/12 mx-auto right-0 left-0 rounded-2xl opacity-80 text-white"
+      >
         <h1 className="font-bold text-4xl text-white m-4">
           {isSignInForm ? "Sign In" : "Sign Up"}
         </h1>
@@ -59,7 +89,10 @@ const Login = () => {
           className="w-full p-4 m-4 bg-gray-500 rounded-2xl"
         />
         <p className="text-red-500 text-lg">{errorMessage}</p>
-        <button className="p-4 m-4 w-full cursor-pointer bg-red-500 rounded-2xl"onClick={handleButtonClick}>
+        <button
+          className="p-4 m-4 w-full cursor-pointer bg-red-500 rounded-2xl"
+          onClick={handleButtonClick}
+        >
           {isSignInForm ? "Sign In" : "Sign Up"}
         </button>
         <p className="p-4 m-2 cursor-pointer" onClick={toggleSignInForm}>
